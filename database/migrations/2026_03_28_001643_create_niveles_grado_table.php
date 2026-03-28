@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('niveles_grado', function (Blueprint $table) {
+        Schema::create('niveles_grados', function (Blueprint $table) {
             $table->increments('id');
             $table->string('nombre', 50);
         });

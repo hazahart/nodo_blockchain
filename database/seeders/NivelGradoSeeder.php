@@ -9,7 +9,7 @@ class NivelGradoSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('niveles_grado')->insert([
+        DB::table('niveles_grados')->insert([
             ['nombre' => 'Técnico'],
             ['nombre' => 'Licenciatura'],
             ['nombre' => 'Maestría'],

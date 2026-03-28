@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('nombre', 255);
             $table->unsignedInteger('nivel_grado_id')->nullable();
-            $table->foreign('nivel_grado_id')->references('id')->on('niveles_grado');
+            $table->foreign('nivel_grado_id')->references('id')->on('niveles_grados');
             $table->timestamp('creado_en')->useCurrent();
         });
     }
