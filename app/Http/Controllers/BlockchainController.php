@@ -8,14 +8,16 @@ use App\Services\BlockchainService;
 use App\Services\ConsensusService;
 use App\Services\NodeService;
 use Illuminate\Support\Facades\Log;
+use App\Services\EventLogger;
 
 class BlockchainController extends Controller
 {
     public function __construct(
         private BlockchainService $blockchain,
-        private ConsensusService  $consensus,
-        private NodeService       $node,
-    ) {}
+        private ConsensusService $consensus,
+        private NodeService $node,
+    ) {
+    }
 
     public function chain()
     {
@@ -24,7 +26,7 @@ class BlockchainController extends Controller
         Log::info('[Chain] Cadena consultada', ['longitud' => count($cadena)]);
 
         return response()->json([
-            'chain'    => $cadena,
+            'chain' => $cadena,
             'longitud' => count($cadena),
         ]);
     }
@@ -42,7 +44,7 @@ class BlockchainController extends Controller
         $bloques = [];
 
         foreach ($pendientes as $transaccion) {
-            $bloque    = $this->blockchain->crearBloque($transaccion);
+            $bloque = $this->blockchain->crearBloque($transaccion);
             $bloques[] = $bloque;
 
             $this->node->propagarBloque($bloque->toArray());
@@ -96,5 +98,12 @@ class BlockchainController extends Controller
         return response()->json([
             'mensaje' => 'Bloque aceptado y agregado a la cadena',
         ], 201);
+
+        EventLogger::log('bloque_recibido', 'Bloque recibido y validado', [
+            'hash' => substr($datos['hash_actual'], 0, 16) . '...',
+        ]);
+
+        // Cuando rechaza:
+        EventLogger::log('error', 'Bloque inválido rechazado', []);
     }
 }

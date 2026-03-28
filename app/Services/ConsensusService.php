@@ -6,26 +6,29 @@ use App\Models\Grado;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Nodo;
+use App\Services\EventLogger;
 
 class ConsensusService
 {
     public function __construct(
         private BlockchainService $blockchain
-    ) {}
+    ) {
+    }
 
     public function resolver(): array
     {
-        $nodos          = Nodo::where('activo', true)->get();
-        $cadenaActual   = Grado::orderBy('creado_en')->get()->toArray();
+        $nodos = Nodo::where('activo', true)->get();
+        $cadenaActual = Grado::orderBy('creado_en')->get()->toArray();
         $longitudMaxima = count($cadenaActual);
-        $nuevaCadena    = null;
-        $nodoGanador    = null;
+        $nuevaCadena = null;
+        $nodoGanador = null;
 
         foreach ($nodos as $nodo) {
             try {
                 $response = Http::timeout(5)->get("{$nodo->url}/api/chain");
 
-                if (!$response->ok()) continue;
+                if (!$response->ok())
+                    continue;
 
                 $cadenaRemota = $response->json('chain');
 
@@ -35,12 +38,12 @@ class ConsensusService
                     $this->blockchain->cadenaEsValida($cadenaRemota)
                 ) {
                     $longitudMaxima = count($cadenaRemota);
-                    $nuevaCadena    = $cadenaRemota;
-                    $nodoGanador    = $nodo->url;
+                    $nuevaCadena = $cadenaRemota;
+                    $nodoGanador = $nodo->url;
                 }
             } catch (\Exception $e) {
                 Log::error('[Consensus] Error consultando nodo', [
-                    'nodo'  => $nodo->url,
+                    'nodo' => $nodo->url,
                     'error' => $e->getMessage(),
                 ]);
             }
@@ -52,9 +55,9 @@ class ConsensusService
 
             return [
                 'reemplazada' => true,
-                'mensaje'     => 'Cadena reemplazada por una más larga y válida',
+                'mensaje' => 'Cadena reemplazada por una más larga y válida',
                 'nodo_fuente' => $nodoGanador,
-                'longitud'    => $longitudMaxima,
+                'longitud' => $longitudMaxima,
             ];
         }
 
@@ -62,9 +65,19 @@ class ConsensusService
 
         return [
             'reemplazada' => false,
-            'mensaje'     => 'Esta cadena ya es la más larga',
-            'longitud'    => $longitudMaxima,
+            'mensaje' => 'Esta cadena ya es la más larga',
+            'longitud' => $longitudMaxima,
         ];
+
+        EventLogger::log('consenso', 'Cadena reemplazada', [
+            'fuente' => $nodoGanador,
+            'longitud' => $longitudMaxima,
+        ]);
+
+        EventLogger::log('consenso', 'Cadena local es la más larga', [
+            'longitud' => $longitudMaxima,
+        ]);
+
     }
 
     private function reemplazarCadena(array $nuevaCadena): void

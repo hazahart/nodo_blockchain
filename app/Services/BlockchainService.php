@@ -13,12 +13,12 @@ class BlockchainService
     public function calcularHash(array $datos): string
     {
         $cadena = implode('', [
-            $datos['persona_id']      ?? '',
-            $datos['institucion_id']  ?? '',
+            $datos['persona_id'] ?? '',
+            $datos['institucion_id'] ?? '',
             $datos['titulo_obtenido'] ?? '',
-            $datos['fecha_fin']       ?? '',
-            $datos['hash_anterior']   ?? '',
-            $datos['nonce']           ?? '',
+            $datos['fecha_fin'] ?? '',
+            $datos['hash_anterior'] ?? '',
+            $datos['nonce'] ?? '',
         ]);
 
         return hash('sha256', $cadena);
@@ -37,10 +37,20 @@ class BlockchainService
 
         Log::info('[Blockchain] Bloque minado', [
             'nonce' => $datos['nonce'],
-            'hash'  => $hash,
+            'hash' => $hash,
         ]);
 
         $datos['hash_actual'] = $hash;
+
+        EventLogger::log('minando', 'Iniciando Proof of Work', [
+            'hash_anterior' => $hashAnterior,
+        ]);
+
+        // Después de encontrar el hash:
+        EventLogger::log('bloque_minado', 'Bloque minado correctamente', [
+            'nonce' => $datos['nonce'],
+            'hash' => substr($hash, 0, 16) . '...',
+        ]);
 
         return $datos;
     }
@@ -55,7 +65,7 @@ class BlockchainService
     public function cadenaEsValida(array $cadena): bool
     {
         for ($i = 1; $i < count($cadena); $i++) {
-            $bloque   = $cadena[$i];
+            $bloque = $cadena[$i];
             $anterior = $cadena[$i - 1];
 
             if ($bloque['hash_anterior'] !== $anterior['hash_actual']) {
@@ -80,24 +90,24 @@ class BlockchainService
 
     public function crearBloque(Transaccion $transaccion): Grado
     {
-        $datos       = $transaccion->datos;
+        $datos = $transaccion->datos;
         $hashAnterior = $this->obtenerUltimoHash();
         $datosMinados = $this->minar($datos, $hashAnterior);
 
         $grado = Grado::create([
-            'persona_id'      => $datosMinados['persona_id']      ?? null,
-            'institucion_id'  => $datosMinados['institucion_id']  ?? null,
-            'programa_id'     => $datosMinados['programa_id']     ?? null,
-            'fecha_inicio'    => $datosMinados['fecha_inicio']    ?? null,
-            'fecha_fin'       => $datosMinados['fecha_fin']       ?? null,
+            'persona_id' => $datosMinados['persona_id'] ?? null,
+            'institucion_id' => $datosMinados['institucion_id'] ?? null,
+            'programa_id' => $datosMinados['programa_id'] ?? null,
+            'fecha_inicio' => $datosMinados['fecha_inicio'] ?? null,
+            'fecha_fin' => $datosMinados['fecha_fin'] ?? null,
             'titulo_obtenido' => $datosMinados['titulo_obtenido'] ?? null,
-            'numero_cedula'   => $datosMinados['numero_cedula']   ?? null,
-            'titulo_tesis'    => $datosMinados['titulo_tesis']    ?? null,
-            'menciones'       => $datosMinados['menciones']       ?? null,
-            'hash_actual'     => $datosMinados['hash_actual'],
-            'hash_anterior'   => $datosMinados['hash_anterior'],
-            'nonce'           => $datosMinados['nonce'],
-            'firmado_por'     => $datosMinados['firmado_por']     ?? 'nodo-laravel',
+            'numero_cedula' => $datosMinados['numero_cedula'] ?? null,
+            'titulo_tesis' => $datosMinados['titulo_tesis'] ?? null,
+            'menciones' => $datosMinados['menciones'] ?? null,
+            'hash_actual' => $datosMinados['hash_actual'],
+            'hash_anterior' => $datosMinados['hash_anterior'],
+            'nonce' => $datosMinados['nonce'],
+            'firmado_por' => $datosMinados['firmado_por'] ?? 'nodo-laravel',
         ]);
 
         $transaccion->update(['minada' => true]);

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Nodo;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\EventLogger;
 
 class NodeService
 {
@@ -18,11 +19,18 @@ class NodeService
                 Log::info('[Node] Transacción propagada', ['nodo' => $nodo->url]);
             } catch (\Exception $e) {
                 Log::error('[Node] Error propagando transacción', [
-                    'nodo'  => $nodo->url,
+                    'nodo' => $nodo->url,
                     'error' => $e->getMessage(),
                 ]);
             }
         }
+        EventLogger::log('propagacion', "Propagado a {$nodo->url}", [
+            'nodo' => $nodo->nombre ?? $nodo->url,
+        ]);
+
+        EventLogger::log('error', "Error propagando a {$nodo->url}", [
+            'error' => $e->getMessage(),
+        ]);
     }
 
     public function propagarBloque(array $bloque): void
@@ -35,7 +43,7 @@ class NodeService
                 Log::info('[Node] Bloque propagado', ['nodo' => $nodo->url]);
             } catch (\Exception $e) {
                 Log::error('[Node] Error propagando bloque', [
-                    'nodo'  => $nodo->url,
+                    'nodo' => $nodo->url,
                     'error' => $e->getMessage(),
                 ]);
             }
