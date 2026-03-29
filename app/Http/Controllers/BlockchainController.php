@@ -76,9 +76,24 @@ class BlockchainController extends Controller
         ) {
             Log::warning('[Bloque] Bloque recibido inválido', $datos);
 
+            EventLogger::log('error', 'Bloque inválido rechazado', []);
+
             return response()->json([
                 'mensaje' => 'Bloque inválido rechazado',
             ], 422);
+        }
+
+        $ultimoHashLocal = $this->blockchain->obtenerUltimoHash();
+
+        if ($ultimoHashLocal !== '0' && $datos['hash_anterior'] !== $ultimoHashLocal) {
+            Log::warning('[Bloque] Desincronización detectada', [
+                'esperado' => $ultimoHashLocal, 
+                'recibido' => $datos['hash_anterior']
+            ]);
+            
+            return response()->json([
+                'mensaje' => 'El hash_anterior no coincide con la cadena local. Se requiere resolver conflictos (consenso).'
+            ], 409);
         }
 
         $existe = Grado::where('hash_actual', $datos['hash_actual'])->exists();
@@ -98,9 +113,6 @@ class BlockchainController extends Controller
         EventLogger::log('bloque_recibido', 'Bloque recibido y validado', [
             'hash' => substr($datos['hash_actual'], 0, 16) . '...',
         ]);
-
-        // Cuando rechaza:
-        EventLogger::log('error', 'Bloque inválido rechazado', []);
 
         return response()->json([
             'mensaje' => 'Bloque aceptado y agregado a la cadena',

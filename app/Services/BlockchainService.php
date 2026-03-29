@@ -46,7 +46,6 @@ class BlockchainService
             'hash_anterior' => $hashAnterior,
         ]);
 
-        // Después de encontrar el hash:
         EventLogger::log('bloque_minado', 'Bloque minado correctamente', [
             'nonce' => $datos['nonce'],
             'hash' => substr($hash, 0, 16) . '...',

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class NivelesGrado extends Model
 {
     public $timestamps = false;
-    protected $table = 'niveles_grado';
+    protected $table = 'niveles_grados';
 
     protected $fillable = ['nombre'];
 
