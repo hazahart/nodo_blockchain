@@ -4,7 +4,7 @@ info:
   description: API REST para la gestión, minado y propagación de bloques en una red blockchain distribuida de títulos académicos.
   version: 1.0.0
 servers:
-  - url: /api
+  - url: /nodo_blockchain/public/api
     description: Nodo Laravel
 paths:
   /chain:
