@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: Nodo Laravel - Blockchain Grados Académicos
+  description: API REST para la gestión, minado y propagación de bloques en una red blockchain distribuida de títulos académicos.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Nodo Laravel
+paths:
+  /chain:
+    get:
+      summary: Obtener la cadena de bloques completa
+      tags:
+        - Blockchain
+      responses:
+        '200':
+          description: Cadena obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chain:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BloqueGrado'
+                  longitud:
+                    type: integer
+  /mine:
+    post:
+      summary: Minar transacciones pendientes
+      tags:
+        - Blockchain
+      responses:
+        '200':
+          description: Resultado del proceso de minado
+  /bloques/recibir:
+    post:
+      summary: Recibir y validar un bloque de otro nodo
+      tags:
+        - Blockchain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloqueGrado'
+      responses:
+        '201':
+          description: Bloque aceptado y agregado a la cadena
+        '200':
+          description: Bloque ya existe en esta cadena
+        '409':
+          description: Conflicto - Desincronización de cadena detectada
+        '422':
+          description: Bloque inválido rechazado
+  /nodes/resolve:
+    get:
+      summary: Resolver conflictos (Consenso)
+      tags:
+        - Consenso
+      responses:
+        '200':
+          description: Resultado de la resolución de la cadena
+  /transactions:
+    get:
+      summary: Listar transacciones pendientes
+      tags:
+        - Transacciones
+      responses:
+        '200':
+          description: Lista de transacciones sin minar
+    post:
+      summary: Crear y propagar nueva transacción
+      tags:
+        - Transacciones
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaTransaccion'
+      responses:
+        '201':
+          description: Transacción recibida y propagada
+        '200':
+          description: Transacción duplicada
+  /nodes/register:
+    post:
+      summary: Registrar un nuevo nodo en la red
+      tags:
+        - Red (Nodos)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  example: http://192.168.1.10:8002
+                nombre:
+                  type: string
+                  example: Nodo B
+      responses:
+        '201':
+          description: Nodo registrado correctamente
+  /nodes:
+    get:
+      summary: Listar nodos registrados
+      tags:
+        - Red (Nodos)
+      responses:
+        '200':
+          description: Nodos activos en la red
+
+components:
+  schemas:
+    BloqueGrado:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        persona_id:
+          type: string
+          format: uuid
+        institucion_id:
+          type: string
+          format: uuid
+        programa_id:
+          type: string
+          format: uuid
+        titulo_obtenido:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        hash_actual:
+          type: string
+        hash_anterior:
+          type: string
+        nonce:
+          type: integer
+        firmado_por:
+          type: string
+    NuevaTransaccion:
+      type: object
+      required:
+        - persona_id
+        - institucion_id
+        - programa_id
+        - titulo_obtenido
+        - fecha_fin
+      properties:
+        persona_id:
+          type: string
+          format: uuid
+        institucion_id:
+          type: string
+          format: uuid
+        programa_id:
+          type: string
+          format: uuid
+        titulo_obtenido:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
